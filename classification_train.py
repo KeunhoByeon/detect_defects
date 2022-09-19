@@ -103,7 +103,7 @@ def run(args):
 
     # Logger
     logger = Logger(os.path.join(args.result, 'log.txt'), epochs=args.epochs, dataset_size=len(train_loader.dataset), float_round=5)
-    logger.set_sort(['loss', 'accuracy', 'time'])
+    logger.set_sort(['loss', 'accuracy', 'confusion_mat', 'time'])
     logger(str(args))
 
     save_dir = os.path.join(args.result, 'models')
