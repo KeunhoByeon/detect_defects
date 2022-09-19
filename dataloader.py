@@ -80,7 +80,7 @@ class StainlessDefectsDataset(Dataset):
         img = (img - self.mean) / self.std
         img = img.transpose(2, 0, 1)
         img = torch.from_numpy(img)
-        gt = torch.from_numpy(np.array([gt]))
+        gt = torch.from_numpy(np.array(gt)).type(torch.LongTensor)
 
         return img, gt
 

@@ -7,7 +7,7 @@ import torch
 import torch.nn as nn
 from tqdm import tqdm
 
-from classification_model import load_model
+from classification_model import Classifier
 from dataloader import StainlessDefectsDataset
 from logger import Logger
 from utils import accuracy
@@ -16,6 +16,7 @@ from utils import accuracy
 def train(epoch, model, criterion, optimizer, train_loader, logger=None):
     model.train()
 
+    confusion_mat = [[0, 0], [0, 0]]
     num_progress, next_print = 0, args.print_freq
     for i, (inputs, targets) in enumerate(train_loader):
         if torch.cuda.is_available():
@@ -24,19 +25,25 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
 
         output = model(inputs)
         loss = criterion(output, targets)
-        acc = accuracy(output, targets)
+        acc = accuracy(output, targets)[0]
 
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
 
-        logger.add_history('batch', {'loss': loss.item(), 'accuracy': acc})
         logger.add_history('total', {'loss': loss.item(), 'accuracy': acc})
+        logger.add_history('batch', {'loss': loss.item(), 'accuracy': acc})
+
+        # Confusion Matrix
+        _, preds = output.topk(1, 1, True, True)
+        for t, p in zip(targets, preds):
+            confusion_mat[int(t)][p[0]] += 1
 
         num_progress += len(inputs)
         if num_progress >= next_print:
             if logger is not None:
-                logger(history_key='batch', epoch=epoch, batch=num_progress, time=time.strftime('%Y-%m-%d %H:%M:%S'))
+                logger(history_key='batch', epoch=epoch, batch=num_progress, confusion_mat=confusion_mat, time=time.strftime('%Y-%m-%d %H:%M:%S'))
+            confusion_mat = [[0, 0], [0, 0]]
             next_print += args.print_freq
 
         del output, loss, acc
@@ -57,7 +64,7 @@ def val(epoch, model, criterion, val_loader, logger=None):
 
             output = model(inputs)
             loss = criterion(output, targets)
-            acc = accuracy(output, targets)
+            acc = accuracy(output, targets)[0]
 
             logger.add_history('total', {'loss': loss.item(), 'accuracy': acc})
 
@@ -80,12 +87,12 @@ def run(args):
         torch.backends.cudnn.deterministic = True
 
     # Model
-    model = load_model(args.model, num_classes=1, pretrained=False)
+    model = Classifier(args.model, num_classes=2, pretrained=True)
     if args.resume is not None:
         model.load_state_dict(torch.load(args.resume))
 
     # Criterion
-    criterion = nn.BCEWithLogitsLoss()
+    criterion = nn.CrossEntropyLoss()
 
     # Optimizer
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
@@ -110,6 +117,7 @@ def run(args):
     os.makedirs(save_dir, exist_ok=True)
 
     # Run training
+    val('preval', model, criterion, val_loader, logger=logger)
     print('Training...')
     for epoch in range(args.start_epoch, args.epochs):
         train(epoch, model, criterion, optimizer, train_loader, logger=logger)
@@ -121,7 +129,7 @@ def run(args):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Training')
     # Model Arguments
-    parser.add_argument('--model', default='resnet18', help='u2net or u2netp')
+    parser.add_argument('--model', default='resnet101', help='u2net or u2netp')
     parser.add_argument('--pretrained', default=False, action='store_true', help='Load pretrained model.')
     # Data Arguments
     parser.add_argument('--data', default='~/data/KolektorSDD2', help='path to dataset')
