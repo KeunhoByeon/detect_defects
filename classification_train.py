@@ -43,7 +43,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
         num_progress += len(inputs)
         if num_progress >= next_print:
             if logger is not None:
-                logger(history_key='batch', epoch=epoch, batch=num_progress, confusion_mat=confusion_mat, time=time.strftime('%Y-%m-%d %H:%M:%S'))
+                logger(history_key='batch', epoch=epoch, batch=num_progress, confusion_mat=confusion_mat, time=time.strftime('%Y%m%d %H:%M:%S'))
             confusion_mat = [[0, 0], [0, 0]]
             next_print += args.print_freq
 
@@ -77,7 +77,7 @@ def val(epoch, model, criterion, val_loader, logger=None):
             del output, loss, acc
 
         if logger is not None:
-            logger('*Validation', history_key='total', confusion_mat=confusion_mat, time=time.strftime('%Y-%m-%d %H:%M:%S'))
+            logger('*Validation', history_key='total', confusion_mat=confusion_mat, time=time.strftime('%Y%m%d %H:%M:%S'))
 
 
 def run(args):
@@ -118,7 +118,6 @@ def run(args):
     os.makedirs(save_dir, exist_ok=True)
 
     # Run training
-    val('preval', model, criterion, val_loader, logger=logger)
     print('Training...')
     for epoch in range(args.start_epoch, args.epochs):
         train(epoch, model, criterion, optimizer, train_loader, logger=logger)
