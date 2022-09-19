@@ -16,7 +16,7 @@ from utils import accuracy
 def train(epoch, model, criterion, optimizer, train_loader, logger=None):
     model.train()
 
-    confusion_mat = [[0, 0], [0, 0]]
+    total_confusion_mat, confusion_mat = [[0, 0], [0, 0]], [[0, 0], [0, 0]]
     num_progress, next_print = 0, args.print_freq
     for i, (inputs, targets) in enumerate(train_loader):
         if torch.cuda.is_available():
@@ -38,6 +38,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
         _, preds = output.topk(1, 1, True, True)
         for t, p in zip(targets, preds):
             confusion_mat[int(t)][p[0]] += 1
+            total_confusion_mat[int(t)][p[0]] += 1
 
         num_progress += len(inputs)
         if num_progress >= next_print:
@@ -49,7 +50,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
         del output, loss, acc
 
     if logger is not None:
-        logger(history_key='total', epoch=epoch)
+        logger(history_key='total', epoch=epoch, confusion_mat=total_confusion_mat)
 
 
 def val(epoch, model, criterion, val_loader, logger=None):
