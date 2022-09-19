@@ -20,6 +20,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
     for i, (inputs, targets) in enumerate(train_loader):
         if torch.cuda.is_available():
             inputs = inputs.cuda()
+            targets = targets.cuda()
 
         output = model(inputs)
         loss = criterion(output, targets)
@@ -35,7 +36,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
         num_progress += len(inputs)
         if num_progress >= next_print:
             if logger is not None:
-                logger(history_key='batch', epoch=epoch, batch=num_progress, time=int(time.time()))
+                logger(history_key='batch', epoch=epoch, batch=num_progress, time=time.strftime('%Y-%m-%d %H:%M:%S'))
             next_print += args.print_freq
 
         del output, loss, acc
@@ -52,6 +53,7 @@ def val(epoch, model, criterion, val_loader, logger=None):
         for i, (inputs, targets) in tqdm(enumerate(val_loader), leave=False, desc='Validation {}'.format(epoch), total=len(val_loader)):
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
+                targets = targets.cuda()
 
             output = model(inputs)
             loss = criterion(output, targets)
@@ -67,7 +69,7 @@ def val(epoch, model, criterion, val_loader, logger=None):
             del output, loss, acc
 
         if logger is not None:
-            logger('*Validation', history_key='total', confusion_mat=confusion_mat, time=time.time())
+            logger('*Validation', history_key='total', confusion_mat=confusion_mat, time=time.strftime('%Y-%m-%d %H:%M:%S'))
 
 
 def run(args):
@@ -108,7 +110,6 @@ def run(args):
     os.makedirs(save_dir, exist_ok=True)
 
     # Run training
-    val('preval', model, criterion, val_loader, logger=logger)
     print('Training...')
     for epoch in range(args.start_epoch, args.epochs):
         train(epoch, model, criterion, optimizer, train_loader, logger=logger)
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     parser.add_argument('--seed', default=103, type=int, help='seed for initializing training.')
     # Validation and Debugging Arguments
     parser.add_argument('--val_freq', default=1, type=int, help='validation freq')
-    parser.add_argument('--print_freq', default=10, type=int, help='print and save frequency')
+    parser.add_argument('--print_freq', default=100, type=int, help='print and save frequency')
     parser.add_argument('--result', default='results', help='path to results')
     parser.add_argument('--resume', default=None, type=str, help='path to latest checkpoint')
     parser.add_argument('--debug', default=False, action='store_true', help='debug validation')

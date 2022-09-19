@@ -10,20 +10,18 @@ from utils import resize_and_pad_image
 
 
 class StainlessDefectsDataset(Dataset):
-    def __init__(self, base_dir, split, input_size=None, data_type='classification'):
+    def __init__(self, base_dir: str, split: str, input_size: int = None, data_type: str = 'classification', do_aug: bool = False):
         self.base_dir = base_dir
         self.split = split
         self.input_size = input_size
         self.data_type = data_type
+        self.do_aug = do_aug
 
         self.mean = np.array([0.485, 0.456, 0.406], dtype=np.float32).reshape(1, 1, 3)
         self.std = np.array([0.229, 0.224, 0.225], dtype=np.float32).reshape(1, 1, 3)
 
         # Augmentation setting (Not yet implemented all)
-        self.affine_seq = iaa.Sequential([
-            iaa.Sometimes(0.5, iaa.Fliplr(0.5)),
-            iaa.Sometimes(0.5, iaa.Flipud(0.5)),
-        ], random_order=True)
+        self.affine_seq = iaa.Sequential([iaa.Sometimes(0.5, iaa.Fliplr(0.5)), iaa.Sometimes(0.5, iaa.Flipud(0.5)), ], random_order=True)
         # self.color_seq = iaa.Sequential([
         #     iaa.Sometimes(0.1, iaa.GaussianBlur(sigma=(0, 0.5))),
         #     iaa.Sometimes(0.1, iaa.AdditiveGaussianNoise(loc=0, scale=(0.0, 0.05 * 255), per_channel=0.5)),
@@ -58,6 +56,11 @@ class StainlessDefectsDataset(Dataset):
 
                 self.samples.append((img_path, gt))
 
+                # TEMP
+                if gt > 0 and self.split == 'train':
+                    for _ in range(8):
+                        self.samples.append((img_path, gt))
+
         if self.data_type == 'classification':
             print('Loaded {} total: {} ({})'.format(self.split, len(self.samples), temp_label_num))
         else:
@@ -70,7 +73,7 @@ class StainlessDefectsDataset(Dataset):
         if self.input_size is not None:
             img = resize_and_pad_image(img, target_size=(self.input_size, self.input_size), keep_ratio=True, padding=True)
 
-        if self.split == 'train':
+        if self.split == 'train' and self.do_aug:
             img = self.affine_seq.augment_image(img)
 
         img = img.astype(np.float32) / 255.
