@@ -82,7 +82,7 @@ class StainlessDefectsDataset(Dataset):
         img = torch.from_numpy(img)
         gt = torch.from_numpy(np.array(gt)).type(torch.LongTensor)
 
-        return img, gt
+        return img_path, img, gt
 
     def __len__(self):
         return len(self.samples)

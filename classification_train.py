@@ -18,7 +18,7 @@ def train(epoch, model, criterion, optimizer, train_loader, logger=None):
 
     total_confusion_mat, confusion_mat = [[0, 0], [0, 0]], [[0, 0], [0, 0]]
     num_progress, next_print = 0, args.print_freq
-    for i, (inputs, targets) in enumerate(train_loader):
+    for i, (_, inputs, targets) in enumerate(train_loader):
         if torch.cuda.is_available():
             inputs = inputs.cuda()
             targets = targets.cuda()
@@ -58,7 +58,7 @@ def val(epoch, model, criterion, val_loader, logger=None):
 
     with torch.no_grad():
         confusion_mat = [[0, 0], [0, 0]]
-        for i, (inputs, targets) in tqdm(enumerate(val_loader), leave=False, desc='Validation {}'.format(epoch), total=len(val_loader)):
+        for i, (_, inputs, targets) in tqdm(enumerate(val_loader), leave=False, desc='Validation {}'.format(epoch), total=len(val_loader)):
             if torch.cuda.is_available():
                 inputs = inputs.cuda()
                 targets = targets.cuda()
@@ -104,7 +104,7 @@ def run(args):
         criterion = criterion.cuda()
 
     # Dataset
-    train_dataset = StainlessDefectsDataset(args.data, 'train', input_size=args.input_size, data_type='classification')
+    train_dataset = StainlessDefectsDataset(args.data, 'train', input_size=args.input_size, data_type='classification', do_aug=True)
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers, pin_memory=True, shuffle=True)
     val_dataset = StainlessDefectsDataset(args.data, 'test', input_size=args.input_size, data_type='classification')
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.workers, pin_memory=True, shuffle=False)
