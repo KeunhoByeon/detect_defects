@@ -133,13 +133,13 @@ if __name__ == '__main__':
     parser.add_argument('--pretrained', default=False, action='store_true', help='Load pretrained model.')
     # Data Arguments
     parser.add_argument('--data', default='~/data/KolektorSDD2', help='path to dataset')
-    parser.add_argument('--workers', default=1, type=int, help='number of data loading workers')
+    parser.add_argument('--workers', default=4, type=int, help='number of data loading workers')
     parser.add_argument('--input_size', default=512, type=int, help='image input size')
     # Training Arguments
     parser.add_argument('--start_epoch', default=0, type=int, help='manual epoch number')
     parser.add_argument('--epochs', default=100, type=int, help='number of total epochs to run')
     parser.add_argument('--batch_size', default=16, type=int, help='mini-batch size')
-    parser.add_argument('--lr', default=0.001, type=float, help='initial learning rate', dest='lr')
+    parser.add_argument('--lr', default=0.0002, type=float, help='initial learning rate', dest='lr')
     parser.add_argument('--seed', default=103, type=int, help='seed for initializing training.')
     # Validation and Debugging Arguments
     parser.add_argument('--val_freq', default=1, type=int, help='validation freq')
